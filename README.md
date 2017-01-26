@@ -45,12 +45,12 @@ kubectl port-forward clair-and-kate-1jzhx 8080
 - Prometheous integration (for alert manager)
 - Autoupdate a running container
 
-## Example API output http://127.0.0.1:8080/
+## API output http://127.0.0.1:8080/
 ```json
 {
   "Containers": [
     {
-      "LastCheck": "2017-01-26T19:38:13.066679141Z",
+      "LastCheck": "2017-01-26T19:48:23.757871838Z",
       "Vulnerabilities": [
         {
           "Name": "CVE-2016-2090",
@@ -72,56 +72,8 @@ kubectl port-forward clair-and-kate-1jzhx 8080
       "ScanStarted": false
     },
     {
-      "LastCheck": "2017-01-26T19:37:50.66132743Z",
+      "LastCheck": "2017-01-26T19:47:28.267409008Z",
       "Vulnerabilities": [
-        {
-          "Name": "CVE-2016-7543",
-          "NamespaceName": "debian:8",
-          "Description": "Bash before 4.4 allows local users to execute arbitrary commands with root privileges via crafted SHELLOPTS and PS4 environment variables.",
-          "Link": "https://security-tracker.debian.org/tracker/CVE-2016-7543",
-          "Severity": "High",
-          "Metadata": {
-            "NVD": {
-              "CVSSv2": {
-                "Score": 7.2,
-                "Vectors": "AV:L/AC:L/Au:N/C:C/I:C"
-              }
-            }
-          },
-          "FixedBy": "4.3-11+deb8u1"
-        },
-        {
-          "Name": "CVE-2016-0494",
-          "NamespaceName": "debian:8",
-          "Description": "Unspecified vulnerability in the Java SE and Java SE Embedded components in Oracle Java SE 6u105, 7u91, and 8u66 and Java SE Embedded 8u65 allows remote attackers to affect confidentiality, integrity, and availability via unknown vectors related to 2D.",
-          "Link": "https://security-tracker.debian.org/tracker/CVE-2016-0494",
-          "Severity": "High",
-          "Metadata": {
-            "NVD": {
-              "CVSSv2": {
-                "Score": 10,
-                "Vectors": "AV:N/AC:L/Au:N/C:C/I:C"
-              }
-            }
-          },
-          "FixedBy": "52.1-8+deb8u4"
-        },
-        {
-          "Name": "CVE-2016-6293",
-          "NamespaceName": "debian:8",
-          "Description": "The uloc_acceptLanguageFromHTTP function in common/uloc.cpp in International Components for Unicode (ICU) through 57.1 for C/C++ does not ensure that there is a '\\0' character at the end of a certain temporary array, which allows remote attackers to cause a denial of service (out-of-bounds read) or possibly have unspecified other impact via a call with a long httpAcceptLanguage argument.",
-          "Link": "https://security-tracker.debian.org/tracker/CVE-2016-6293",
-          "Severity": "High",
-          "Metadata": {
-            "NVD": {
-              "CVSSv2": {
-                "Score": 7.5,
-                "Vectors": "AV:N/AC:L/Au:N/C:P/I:P"
-              }
-            }
-          },
-          "FixedBy": "52.1-8+deb8u4"
-        },
         {
           "Name": "CVE-2015-8964",
           "NamespaceName": "debian:8",
@@ -154,19 +106,20 @@ kubectl port-forward clair-and-kate-1jzhx 8080
           }
         },
         {
-          "Name": "CVE-2016-2090",
+          "Name": "CVE-2016-7543",
           "NamespaceName": "debian:8",
-          "Description": "Off-by-one vulnerability in the fgetwln function in libbsd before 0.8.2 allows attackers to have unspecified impact via unknown vectors, which trigger a heap-based buffer overflow.",
-          "Link": "https://security-tracker.debian.org/tracker/CVE-2016-2090",
+          "Description": "Bash before 4.4 allows local users to execute arbitrary commands with root privileges via crafted SHELLOPTS and PS4 environment variables.",
+          "Link": "https://security-tracker.debian.org/tracker/CVE-2016-7543",
           "Severity": "High",
           "Metadata": {
             "NVD": {
               "CVSSv2": {
-                "Score": 7.5,
-                "Vectors": "AV:N/AC:L/Au:N/C:P/I:P"
+                "Score": 7.2,
+                "Vectors": "AV:L/AC:L/Au:N/C:C/I:C"
               }
             }
-          }
+          },
+          "FixedBy": "4.3-11+deb8u1"
         },
         {
           "Name": "CVE-2016-8399",
@@ -215,19 +168,82 @@ kubectl port-forward clair-and-kate-1jzhx 8080
             }
           },
           "FixedBy": "3.16.39-1"
+        },
+        {
+          "Name": "CVE-2016-2090",
+          "NamespaceName": "debian:8",
+          "Description": "Off-by-one vulnerability in the fgetwln function in libbsd before 0.8.2 allows attackers to have unspecified impact via unknown vectors, which trigger a heap-based buffer overflow.",
+          "Link": "https://security-tracker.debian.org/tracker/CVE-2016-2090",
+          "Severity": "High",
+          "Metadata": {
+            "NVD": {
+              "CVSSv2": {
+                "Score": 7.5,
+                "Vectors": "AV:N/AC:L/Au:N/C:P/I:P"
+              }
+            }
+          }
+        },
+        {
+          "Name": "CVE-2016-0494",
+          "NamespaceName": "debian:8",
+          "Description": "Unspecified vulnerability in the Java SE and Java SE Embedded components in Oracle Java SE 6u105, 7u91, and 8u66 and Java SE Embedded 8u65 allows remote attackers to affect confidentiality, integrity, and availability via unknown vectors related to 2D.",
+          "Link": "https://security-tracker.debian.org/tracker/CVE-2016-0494",
+          "Severity": "High",
+          "Metadata": {
+            "NVD": {
+              "CVSSv2": {
+                "Score": 10,
+                "Vectors": "AV:N/AC:L/Au:N/C:C/I:C"
+              }
+            }
+          },
+          "FixedBy": "52.1-8+deb8u4"
+        },
+        {
+          "Name": "CVE-2016-6293",
+          "NamespaceName": "debian:8",
+          "Description": "The uloc_acceptLanguageFromHTTP function in common/uloc.cpp in International Components for Unicode (ICU) through 57.1 for C/C++ does not ensure that there is a '\\0' character at the end of a certain temporary array, which allows remote attackers to cause a denial of service (out-of-bounds read) or possibly have unspecified other impact via a call with a long httpAcceptLanguage argument.",
+          "Link": "https://security-tracker.debian.org/tracker/CVE-2016-6293",
+          "Severity": "High",
+          "Metadata": {
+            "NVD": {
+              "CVSSv2": {
+                "Score": 7.5,
+                "Vectors": "AV:N/AC:L/Au:N/C:P/I:P"
+              }
+            }
+          },
+          "FixedBy": "52.1-8+deb8u4"
         }
       ],
       "Image": "quay.io/coreos/clair:v1.2.6",
-      "ScanStarted": false
-    },
-    {
-      "LastCheck": "0001-01-01T00:00:00Z",
-      "Vulnerabilities": null,
-      "Image": "postgres:latest",
       "ScanStarted": true
     },
     {
-      "LastCheck": "2017-01-26T19:38:16.714181418Z",
+      "LastCheck": "2017-01-26T19:48:31.247263772Z",
+      "Vulnerabilities": [
+        {
+          "Name": "CVE-2016-2090",
+          "NamespaceName": "debian:8",
+          "Description": "Off-by-one vulnerability in the fgetwln function in libbsd before 0.8.2 allows attackers to have unspecified impact via unknown vectors, which trigger a heap-based buffer overflow.",
+          "Link": "https://security-tracker.debian.org/tracker/CVE-2016-2090",
+          "Severity": "High",
+          "Metadata": {
+            "NVD": {
+              "CVSSv2": {
+                "Score": 7.5,
+                "Vectors": "AV:N/AC:L/Au:N/C:P/I:P"
+              }
+            }
+          }
+        }
+      ],
+      "Image": "postgres:latest",
+      "ScanStarted": false
+    },
+    {
+      "LastCheck": "2017-01-26T19:48:08.535599784Z",
       "Vulnerabilities": [
         {
           "Name": "CVE-2017-5225",
