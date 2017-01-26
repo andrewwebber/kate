@@ -1,0 +1,8 @@
+go install github.com/andrewwebber/kate
+go install github.com/coreos/clair/contrib/analyze-local-images
+cp ./bin/kate ./src/github.com/andrewwebber/kate/container
+cp ./bin/analyze-local-images ./src/github.com/andrewwebber/kate/container
+docker build -t andrewwebber/kate ./src/github.com/andrewwebber/kate/container
+docker push andrewwebber/kate
+rm ./src/github.com/andrewwebber/kate/container/kate
+rm ./src/github.com/andrewwebber/kate/container/analyze-local-images
