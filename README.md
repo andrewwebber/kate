@@ -1,6 +1,8 @@
-# Kate or K8te
+# Kate, a friend of Clair
 ## Summary
-Turns out if you throw CoreOS Clair into your Kubernetes namespace with the help of a friend Kate will automatically scan all new launched containers. Kate will also rescan all the images every couple of hours just to let you know if the CVE situation has changed.
+Turns out if you throw CoreOS Clair into your Kubernetes namespace with the help of a friend Kate will automatically scan all new launched containers.
+
+Kate will also rescan all the images every couple of hours just to let you know if the CVE situation has changed.
 
 ## Example Deployment
 - Start an example NGINX container
