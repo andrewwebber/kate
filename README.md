@@ -38,10 +38,12 @@ kubectl logs clair-and-kate-66ayv -c clair -f
 kubectl port-forward clair-and-kate-1jzhx 8080
 ```
 
+- Integrate the endpoint into a UI or your monitoring tools
+
 ## TODO
-Build an additional UI Visualization
-Notifications
-Autoupdate a running container
+- Build an additional UI Visualization
+- Prometheous integration (for alert manager)
+- Autoupdate a running container
 
 ## Example API output http://127.0.0.1:8080/
 ```json
