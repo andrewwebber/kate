@@ -23,7 +23,8 @@ var (
 	tokenPath       = flag.String("t", "/var/run/secrets/kubernetes.io/serviceaccount/token", "token path")
 	server          = flag.String("s", "https://kubernetes.default", "server name")
 	namespace       = flag.String("n", "default", "namespace")
-	refreshSeconds  = flag.Int("r", 10, "refresh in seconds")
+	refreshSeconds  = flag.Int("r", 60, "refresh pods loop in seconds")
+	refreshDuration = flag.Int("e", 10800, "rescan image after in seconds")
 	listener        = flag.Bool("l", true, "start listener")
 	clairTest       = flag.Bool("c", false, "clair test")
 	clairTestImage  = flag.String("cc", "nginx", "clair test image")
@@ -33,7 +34,6 @@ var (
 	mutex           = &sync.Mutex{}
 	jobs            chan string
 	mockScanner     bool
-	refreshDuration = 5 * time.Hour
 )
 
 type containerScanResult struct {
@@ -125,7 +125,7 @@ func main() {
 			log.Println("no op")
 		}
 
-		time.Sleep(1 * time.Minute)
+		time.Sleep(time.Duration(*refreshSeconds) * time.Second)
 	}
 }
 
@@ -153,7 +153,7 @@ func scanWorker() {
 			}
 
 			scan := images[image]
-			timeResult := scan.LastCheck.IsZero() || time.Now().UTC().After(scan.LastCheck.Add(refreshDuration))
+			timeResult := scan.LastCheck.IsZero() || time.Now().UTC().After(scan.LastCheck.Add(time.Duration(*refreshDuration)*time.Second))
 			if mockScanner {
 				log.Printf("Time result for %s - %v", image, timeResult)
 			}

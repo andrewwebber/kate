@@ -77,9 +77,6 @@ spec:
         - name: sysfs
           hostPath:
             path: /sys
-        # - name: tmp
-        #   hostPath:
-        #     path: /tmp
         - name: secret-volume
           secret:
             secretName: clairsecret
@@ -94,6 +91,8 @@ spec:
           privileged: true
         command:
           - /usr/local/bin/kate
+        # Refresh to aggressive, useful for testing
+        args: ["-e", "60"]
         volumeMounts:
         - name: docker-config
           mountPath: /root/.docker
@@ -130,5 +129,3 @@ spec:
           name: secret-volume
         - mountPath: /tmp
           name: cve
-        # - mountPath: /tmp
-        #   name: tmp
