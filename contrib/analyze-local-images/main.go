@@ -87,6 +87,7 @@ func (s *sorter) Less(i, j int) bool {
 }
 
 func main() {
+	log.SetFlags(log.Llongfile)
 	os.Exit(intMain())
 }
 
@@ -255,14 +256,13 @@ func AnalyzeLocalImage(imageName string, minSeverity types.Priority, endpoint, m
 
 	By(priority).Sort(vulnerabilities)
 
-	if !*jsonMode {
+	if *jsonMode {
 		jsonOut, err := json.Marshal(vulnerabilities)
 		if err != nil {
 			return err
 		}
 
-		fmt.Println(string(jsonOut))
-		return nil
+		log.Println(string(jsonOut))
 	}
 
 	for _, vulnerabilityInfo := range vulnerabilities {

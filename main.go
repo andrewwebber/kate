@@ -195,10 +195,15 @@ func scanContainer(image string) ([]v1.Vulnerability, error) {
 		return data, err
 	}
 
-	out, err := exec.Command("analyze-local-images", "-json", "-minimum-severity", "High", image).Output()
+	out, err := exec.Command("docker", "pull", image).Output()
 	log.Println(string(out))
 	if err != nil {
-		log.Printf("Error scanning immage %s - %s\n", image, err.Error())
+		return data, err
+	}
+
+	out, err = exec.Command("analyze-local-images", "-json", "-minimum-severity", "High", image).Output()
+	log.Println(string(out))
+	if err != nil {
 		return data, err
 	}
 
