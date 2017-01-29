@@ -50,7 +50,7 @@ var (
 	flagMyAddress       = flag.String("my-address", "127.0.0.1", "Address from the point of view of Clair")
 	flagMinimumSeverity = flag.String("minimum-severity", "Negligible", "Minimum severity of vulnerabilities to show (Unknown, Negligible, Low, Medium, High, Critical, Defcon1)")
 	flagColorMode       = flag.String("color", "auto", "Colorize the output (always, auto, never)")
-	jsonMode            = flag.Bool("json", false, "JSON output")
+	jsonMode            = flag.Bool("json", true, "JSON output")
 )
 
 type vulnerabilityInfo struct {
@@ -257,12 +257,18 @@ func AnalyzeLocalImage(imageName string, minSeverity types.Priority, endpoint, m
 	By(priority).Sort(vulnerabilities)
 
 	if *jsonMode {
-		jsonOut, err := json.Marshal(vulnerabilities)
+		var data []v1.Vulnerability
+		for _, vulnerabilityInfo := range vulnerabilities {
+			data = append(data, vulnerabilityInfo.vulnerability)
+		}
+
+		jsonBytes, err := json.Marshal(data)
 		if err != nil {
 			return err
 		}
 
-		log.Println(string(jsonOut))
+		fmt.Println(string(jsonBytes))
+		return nil
 	}
 
 	for _, vulnerabilityInfo := range vulnerabilities {
