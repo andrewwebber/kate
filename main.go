@@ -1,7 +1,6 @@
 package main
 
 import (
-	"brainloop/util"
 	"encoding/json"
 	"flag"
 	"io/ioutil"
@@ -49,7 +48,7 @@ type containerScan struct {
 
 func main() {
 	flag.Parse()
-	ipAddress, err := util.GetDefaultIP()
+	ipAddress, err := GetDefaultIP()
 	if err != nil {
 		log.Fatal(err)
 	}
