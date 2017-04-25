@@ -97,6 +97,7 @@ func main() {
 			log.Fatal(err)
 		}
 
+		w.Header().Set("Content-Type", "application/json")
 		_, _ = w.Write(imagesBytes)
 	})
 
