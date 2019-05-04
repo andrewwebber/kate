@@ -3,36 +3,35 @@ package main
 import (
 	"encoding/json"
 	"flag"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
 	"os/exec"
 	"strings"
 	"sync"
 	"time"
 
-	"github.com/coreos/clair/api/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"k8s.io/client-go/1.4/kubernetes"
-	"k8s.io/client-go/1.4/pkg/api"
-	"k8s.io/client-go/1.4/rest"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
 )
 
 var (
-	tokenPath       = flag.String("t", "/var/run/secrets/kubernetes.io/serviceaccount/token", "token path")
-	server          = flag.String("s", "https://kubernetes.default", "server name")
 	namespace       = flag.String("n", "default", "namespace")
 	refreshSeconds  = flag.Int("r", 60, "refresh pods loop in seconds")
 	refreshDuration = flag.Int("e", 10800, "rescan image after in seconds")
 	listener        = flag.Bool("l", true, "start listener")
-	clairTest       = flag.Bool("c", false, "clair test")
-	clairTestImage  = flag.String("cc", "nginx", "clair test image")
 	registryFilter  = flag.String("rr", "", "registry filter")
+	clairLocation   = flag.String("c", "clair", "clair endpoint")
 	noop            = flag.Bool("o", false, "no op")
 	images          map[string]*containerScan
 	mutex           = &sync.Mutex{}
 	jobs            chan string
 	mockScanner     bool
+	ipAddress       string
 )
 
 type containerScanResult struct {
@@ -40,43 +39,43 @@ type containerScanResult struct {
 }
 
 type containerScan struct {
-	LastCheck       time.Time
-	Vulnerabilities []v1.Vulnerability
-	Image           string
-	ScanStarted     bool
+	LastCheck   time.Time
+	Image       string
+	ScanStarted bool
+	Report      containerVulnerabilityReport
+}
+
+type containerVulnerabilityReport struct {
+	Unapproved      []string                     `json:"unapproved"`
+	Vulnerabilities []containerVulnerabilityInfo `json:"vulnerabilities"`
+}
+
+type containerVulnerabilityInfo struct {
+	FeatureName    string `json:"featurename"`
+	FeatureVersion string `json:"featureversion"`
+	Vulnerability  string `json:"vulnerability"`
+	Namespace      string `json:"namespace"`
+	Description    string `json:"description"`
+	Link           string `json:"link"`
+	Severity       string `json:"severity"`
+	FixedBy        string `json:"fixedby"`
 }
 
 func main() {
 	flag.Parse()
-	ipAddress, err := GetDefaultIP()
+	log.SetFlags(log.Llongfile)
+
+	var err error
+	ipAddress, err = GetDefaultIP()
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	log.Printf("Current IP Address %s\n", ipAddress)
 
-	if *clairTest {
-		data, err := scanContainer(*clairTestImage)
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		for _, v := range data {
-			log.Printf("Severity: %s Name: %s\n\t\t Description %s\n", v.Severity, v.Name, v.Description)
-		}
-
-		return
-	}
-
-	token, err := ioutil.ReadFile(*tokenPath)
+	config, err := rest.InClusterConfig()
 	if err != nil {
-		log.Fatal(err)
-	}
-
-	config := &rest.Config{
-		Host:        *server,
-		BearerToken: string(token),
-		Insecure:    true,
+		panic(err.Error())
 	}
 
 	// creates the clientset
@@ -110,7 +109,7 @@ func main() {
 	initScanWorker()
 	for {
 		if !*noop {
-			pods, err := clientset.Core().Pods(*namespace).List(api.ListOptions{})
+			pods, err := clientset.CoreV1().Pods(*namespace).List(metav1.ListOptions{})
 			if err != nil {
 				log.Println(err.Error())
 				continue
@@ -163,7 +162,7 @@ func scanWorker() {
 				go func(i string, s *containerScan) {
 					log.Printf("Starting ContainerScan Job %s\n", i)
 					result, err := scanContainer(i)
-					s.Vulnerabilities = result
+					s.Report = result
 					if err != nil {
 						log.Println(err)
 					}
@@ -175,13 +174,13 @@ func scanWorker() {
 	}
 }
 
-func scanContainer(image string) ([]v1.Vulnerability, error) {
+func scanContainer(image string) (containerVulnerabilityReport, error) {
 	mutex.Lock()
 	log.Printf("ScanningContainer %s\n", image)
 	defer mutex.Unlock()
 
 	var err error
-	var data []v1.Vulnerability
+	var data containerVulnerabilityReport
 
 	if len(*registryFilter) > 0 {
 		if !strings.HasPrefix(image, *registryFilter) {
@@ -201,13 +200,25 @@ func scanContainer(image string) ([]v1.Vulnerability, error) {
 		return data, err
 	}
 
-	out, err = exec.Command("analyze-local-images", "-json", "-minimum-severity", "High", image).Output()
+	if _, err := os.Stat("report.json"); err == nil {
+		_ = os.Remove("report.json")
+	}
+
+	out, err = exec.Command("/usr/local/bin/clair-scanner", "-c", *clairLocation, "--ip", ipAddress, "-r", "report.json", "-t", "Medium", image).Output()
 	log.Println(string(out))
+	if _, err := os.Stat("report.json"); os.IsNotExist(err) {
+		return data, fmt.Errorf("no report found for image %s\n", image)
+	}
+
+	out, err = ioutil.ReadFile("report.json")
 	if err != nil {
+		log.Println(err)
 		return data, err
 	}
 
-	err = json.Unmarshal(out, &data)
+	if err = json.Unmarshal(out, &data); err != nil {
+		log.Println(err)
+	}
 
 	return data, err
 }

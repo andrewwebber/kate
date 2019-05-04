@@ -1,0 +1,90 @@
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRoleBinding
+metadata:
+  name: kate-example-rbac
+subjects:
+  - kind: ServiceAccount
+    # Reference to upper's `metadata.name`
+    name: kate
+    # Reference to upper's `metadata.namespace`
+    namespace: kate-example
+roleRef:
+  kind: ClusterRole
+  name: cluster-admin
+  apiGroup: rbac.authorization.k8s.io
+
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: kate
+imagePullSecrets:
+- name: brainloop-ix-registry
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: kate
+spec:
+  clusterIP: None
+  ports:
+  - port: 8080
+    name: http
+    targetPort: http
+    protocol: TCP
+  selector:
+    kate: kate
+---
+kind: Deployment
+apiVersion: extensions/v1beta1
+metadata:
+  name: kate
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: kate
+    spec:
+      serviceAccountName: kate
+      volumes:
+        - name: docker-socket
+          hostPath:
+            path: /var/run/docker.socket
+        - name: docker
+          hostPath:
+            path: /var/lib/docker
+        - name: varrun
+          hostPath:
+            path: /var/run
+        - name: sysfs
+          hostPath:
+            path: /sys
+      containers:
+      - name: kate
+        image: andrewwebber/kate:latest
+        imagePullPolicy: Always
+        securityContext:
+          privileged: true
+        command:
+          - /usr/local/bin/kate
+        # Refresh to aggressive, useful for testing
+        # Namespace to restrict scanning
+        # Location of remote clair cluster
+        args: ["-e", "60", "-n", "kate-example", "-c", "http://clair:6060"]
+        volumeMounts:
+        - name: varrun
+          mountPath: /var/run
+          readOnly: false
+        - mountPath: /var/run/docker.socket
+          name: docker-socket
+          readOnly: false
+        - mountPath: /var/lib/docker
+          name: docker
+          readOnly: true
+        - name: sysfs
+          mountPath: /sys
+          readOnly: true
+        ports:
+          - name: http
+            containerPort: 8080
