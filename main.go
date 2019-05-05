@@ -22,7 +22,7 @@ import (
 var (
 	namespace       = flag.String("n", "default", "namespace")
 	refreshSeconds  = flag.Int("r", 60, "refresh pods loop in seconds")
-	refreshDuration = flag.Int("e", 10800, "rescan image after in seconds")
+	refreshDuration = flag.Int("e", 86400, "rescan image after in seconds")
 	listener        = flag.Bool("l", true, "start listener")
 	registryFilter  = flag.String("rr", "", "registry filter")
 	clairLocation   = flag.String("c", "clair", "clair endpoint")

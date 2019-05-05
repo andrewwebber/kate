@@ -8,7 +8,7 @@ bin/kate:
 
 .PHONY: docker-image
 docker-image: build
-	@docker build -t andrewwebber/kate:v2.0.1 .
+	@docker build -t andrewwebber/kate:v2.0.2 .
 .PHONY: docker-push
 docker-push: docker-image
-	@docker push andrewwebber/kate:v2.0.1
+	@docker push andrewwebber/kate:v2.0.2
