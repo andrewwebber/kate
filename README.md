@@ -1,8 +1,10 @@
 # Kate, a friend of Clair
 ## Summary
-Turns out if you throw CoreOS Clair into your Kubernetes namespace with the help of a friend Kate will automatically scan all new launched containers.
+Turns out if you throw [CoreOS Clair](https://github.com/coreos/clair) into your Kubernetes cluster, with the help of a friend, Kate will automatically scan all newly launched containers.
 
 Kate will also rescan all the images every couple of hours just to let you know if the CVE situation has changed.
+
+This allows you to identify vulnerabilities that exist in production, as apposed to fixes that may exit on your upstream platforms.
 
 ## Example Deployment
 Create a dedicated namespace for clair and switch context to the clair namespace ([Helm Clair Chart](https://github.com/coreos/clair/blob/master/Documentation/running-clair.md#kubernetes-helm))
@@ -44,23 +46,7 @@ kubectl port-forward kate-1jzhx 8080
   "Containers": [
     {
       "LastCheck": "2017-01-26T19:48:23.757871838Z",
-      "Vulnerabilities": [
-        {
-          "Name": "CVE-2016-2090",
-          "NamespaceName": "debian:8",
-          "Description": "Off-by-one vulnerability in the fgetwln function in libbsd before 0.8.2 allows attackers to have unspecified impact via unknown vectors, which trigger a heap-based buffer overflow.",
-          "Link": "https://security-tracker.debian.org/tracker/CVE-2016-2090",
-          "Severity": "High",
-          "Metadata": {
-            "NVD": {
-              "CVSSv2": {
-                "Score": 7.5,
-                "Vectors": "AV:N/AC:L/Au:N/C:P/I:P"
-              }
-            }
-          }
-        }
-      ],
+      "Vulnerabilities": [],
       "Image": "andrewwebber/kate",
       "ScanStarted": false
     },
