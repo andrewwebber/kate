@@ -26,10 +26,9 @@ var (
 	listener        = flag.Bool("l", true, "start listener")
 	registryFilter  = flag.String("rr", "", "registry filter")
 	clairLocation   = flag.String("c", "clair", "clair endpoint")
-	noop            = flag.Bool("o", false, "no op")
-	images          map[string]*containerScan
+	imagesCache     map[string]*containerScan
 	mutex           = &sync.Mutex{}
-	jobs            chan string
+	jobs            chan []string
 	ipAddress       string
 )
 
@@ -86,7 +85,7 @@ func main() {
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		// dirty read
 		var containerImages []*containerScan
-		for _, v := range images {
+		for _, v := range imagesCache {
 			containerImages = append(containerImages, v)
 		}
 
@@ -107,66 +106,68 @@ func main() {
 
 	initScanWorker()
 	for {
-		if !*noop {
-			pods, err := clientset.CoreV1().Pods(*namespace).List(metav1.ListOptions{})
-			if err != nil {
-				log.Println(err.Error())
-				continue
-			}
-
-			for _, pod := range pods.Items {
-				for _, container := range pod.Spec.Containers {
-					jobs <- container.Image
-				}
-			}
-		} else {
-			log.Println("no op")
+		var images []string
+		pods, err := clientset.CoreV1().Pods(*namespace).List(metav1.ListOptions{})
+		if err != nil {
+			log.Println(err.Error())
+			continue
 		}
+
+		for _, pod := range pods.Items {
+			for _, container := range pod.Spec.Containers {
+				images = append(images, container.Image)
+			}
+		}
+
+		jobs <- images
 
 		time.Sleep(time.Duration(*refreshSeconds) * time.Second)
 	}
 }
 
 func initScanWorker() {
-	jobs = make(chan string)
+	jobs = make(chan []string)
 	go scanWorker()
 
-	images = make(map[string]*containerScan)
+	imagesCache = make(map[string]*containerScan)
 }
 
 func scanWorker() {
-	scans := make(chan *containerScan)
 	for {
 		select {
-		case scan := <-scans:
-			scan.ScanStarted = false
-			scan.LastCheck = time.Now().UTC()
+		case imagesToScan := <-jobs:
+			for _, image := range imagesToScan {
+				if imagesCache[image] == nil {
+					imagesCache[image] = &containerScan{Image: image}
+					log.Printf("Created new ContainerScan %s\n", image)
+				}
 
-			log.Printf("ContainerScan %s updated\n", scan.Image)
+				scan := imagesCache[image]
+				timeResult := scan.LastCheck.IsZero() || time.Now().UTC().After(scan.LastCheck.Add(time.Duration(*refreshDuration)*time.Second))
 
-		case image := <-jobs:
-			if images[image] == nil {
-				images[image] = &containerScan{Image: image}
-				log.Printf("Created new ContainerScan %s\n", image)
-			}
+				if timeResult && !scan.ScanStarted {
+					scan.ScanStarted = true
 
-			scan := images[image]
-			timeResult := scan.LastCheck.IsZero() || time.Now().UTC().After(scan.LastCheck.Add(time.Duration(*refreshDuration)*time.Second))
-
-			if timeResult && !scan.ScanStarted {
-				scan.ScanStarted = true
-
-				go func(i string, s *containerScan) {
-					log.Printf("Starting ContainerScan Job %s\n", i)
-					result, err := scanContainer(i)
-					s.Report = result
+					log.Printf("Starting ContainerScan Job %s\n", image)
+					result, err := scanContainer(image)
+					scan.Report = result
 					if err != nil {
 						log.Println(err)
 					}
 
-					scans <- s
-				}(image, scan)
+					scan.ScanStarted = false
+					scan.LastCheck = time.Now().UTC()
+
+					log.Printf("ContainerScan %s updated\n", scan.Image)
+				}
 			}
+
+			imagesCacheReconsiled := make(map[string]*containerScan)
+			for _, i := range imagesToScan {
+				imagesCacheReconsiled[i] = imagesCache[i]
+			}
+
+			imagesCache = imagesCacheReconsiled
 		}
 	}
 }
@@ -196,10 +197,10 @@ func scanContainer(image string) (containerVulnerabilityReport, error) {
 		_ = os.Remove("report.json")
 	}
 
-	out, err = exec.Command("/usr/local/bin/clair-scanner", "-c", *clairLocation, "--ip", ipAddress, "-r", "report.json", "-t", "Medium", image).Output()
+	out, _ = exec.Command("/usr/local/bin/clair-scanner", "-c", *clairLocation, "--ip", ipAddress, "-r", "report.json", "-t", "Medium", image).Output()
 	log.Println(string(out))
 	if _, err := os.Stat("report.json"); os.IsNotExist(err) {
-		return data, fmt.Errorf("no report found for image %s\n", image)
+		return data, fmt.Errorf("no report found for image %s", image)
 	}
 
 	out, err = ioutil.ReadFile("report.json")
