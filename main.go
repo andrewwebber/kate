@@ -30,7 +30,6 @@ var (
 	images          map[string]*containerScan
 	mutex           = &sync.Mutex{}
 	jobs            chan string
-	mockScanner     bool
 	ipAddress       string
 )
 
@@ -153,9 +152,7 @@ func scanWorker() {
 
 			scan := images[image]
 			timeResult := scan.LastCheck.IsZero() || time.Now().UTC().After(scan.LastCheck.Add(time.Duration(*refreshDuration)*time.Second))
-			if mockScanner {
-				log.Printf("Time result for %s - %v", image, timeResult)
-			}
+
 			if timeResult && !scan.ScanStarted {
 				scan.ScanStarted = true
 
@@ -187,11 +184,6 @@ func scanContainer(image string) (containerVulnerabilityReport, error) {
 			log.Println("Skipping security scan")
 			return data, err
 		}
-	}
-
-	if mockScanner {
-		time.Sleep(2 * time.Second)
-		return data, err
 	}
 
 	out, err := exec.Command("docker", "pull", image).Output()
