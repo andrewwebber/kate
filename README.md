@@ -1,5 +1,7 @@
 # Kate, a friend of Clair
 ## Summary
+> [CoreOS Clair](https://github.com/coreos/clair) is an open source project for the static analysis of vulnerabilities in application containers (currently including appc and docker)
+
 Turns out if you throw [CoreOS Clair](https://github.com/coreos/clair) into your Kubernetes cluster, with the help of a friend, Kate will automatically scan all newly launched containers.
 
 Kate will also rescan all the images every couple of hours just to let you know if the CVE situation has changed.
