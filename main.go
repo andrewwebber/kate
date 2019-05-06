@@ -26,6 +26,8 @@ var (
 	listener        = flag.Bool("l", true, "start listener")
 	registryFilter  = flag.String("rr", "", "registry filter")
 	clairLocation   = flag.String("c", "clair", "clair endpoint")
+	username        = flag.String("u", "", "username")
+	password        = flag.String("p", "", "password")
 	imagesCache     map[string]*containerScan
 	mutex           = &sync.Mutex{}
 	jobs            chan []string
@@ -82,7 +84,20 @@ func main() {
 		panic(err.Error())
 	}
 
+	log.Printf("Authorization - %s:%s", *username, *password)
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		if *username != "" {
+			if u, p, ok := r.BasicAuth(); ok {
+				if u != *username || p != *password {
+					http.Error(w, "", http.StatusUnauthorized)
+					return
+				}
+			} else {
+				http.Error(w, "", http.StatusUnauthorized)
+				return
+			}
+		}
+
 		// dirty read
 		var containerImages []*containerScan
 		for _, v := range imagesCache {
